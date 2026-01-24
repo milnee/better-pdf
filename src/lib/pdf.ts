@@ -441,6 +441,61 @@ export async function addWatermark(
   return pdf.save()
 }
 
+export interface EditedTextItem {
+  id: string
+  str: string
+  originalStr: string
+  x: number
+  y: number
+  width: number
+  height: number
+  fontSize: number
+  pageIndex: number
+  transform: number[]
+}
+
+export async function editPdfText(
+  file: File,
+  editedItems: EditedTextItem[],
+  scale: number
+): Promise<Uint8Array> {
+  const pdf = await loadPdf(file)
+  const font = await pdf.embedFont(StandardFonts.Helvetica)
+  const pages = pdf.getPages()
+
+  for (const item of editedItems) {
+    const page = pages[item.pageIndex]
+    if (!page) continue
+
+    const { height: pageHeight } = page.getSize()
+
+    const pdfX = item.x / scale
+    const pdfY = pageHeight - (item.y / scale) - (item.fontSize / scale)
+    const pdfFontSize = item.fontSize / scale
+
+    const originalWidth = font.widthOfTextAtSize(item.originalStr, pdfFontSize)
+    const originalHeight = pdfFontSize * 1.3
+
+    page.drawRectangle({
+      x: pdfX - 1,
+      y: pdfY - 2,
+      width: originalWidth + 2,
+      height: originalHeight + 2,
+      color: rgb(1, 1, 1),
+    })
+
+    page.drawText(item.str, {
+      x: pdfX,
+      y: pdfY,
+      size: pdfFontSize,
+      font,
+      color: rgb(0, 0, 0),
+    })
+  }
+
+  return pdf.save()
+}
+
 export async function addSignature(
   file: File,
   signatureDataUrl: string,
