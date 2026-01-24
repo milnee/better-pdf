@@ -241,8 +241,8 @@ export default function TextPage() {
                           ) : (
                             <div
                               onClick={() => setEditingId(item.id)}
-                              className={`cursor-text hover:bg-blue-100/30 ${
-                                item.edited ? "bg-white" : ""
+                              className={`cursor-text ${
+                                item.edited ? "bg-white hover:bg-gray-100" : "hover:bg-blue-100/30"
                               }`}
                               style={{
                                 fontSize: item.fontSize * 0.98,
