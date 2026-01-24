@@ -137,7 +137,7 @@ export default function TextPage() {
     setDownloading(false)
   }, [file, textItems, scale])
 
-  const currentPageItems = textItems.filter((item) => item.pageIndex === currentPage)
+  const currentPageItems = textItems.filter((item) => item.pageIndex === currentPage && !(item.edited && item.str === ""))
   const hasEdits = textItems.some((item) => item.edited)
 
   return (

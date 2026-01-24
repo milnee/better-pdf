@@ -501,13 +501,15 @@ export async function editPdfText(
       color: rgb(1, 1, 1),
     })
 
-    page.drawText(item.str, {
-      x: pdfX,
-      y: pdfY,
-      size: pdfFontSize,
-      font,
-      color: rgb(0, 0, 0),
-    })
+    if (item.str.trim()) {
+      page.drawText(item.str, {
+        x: pdfX,
+        y: pdfY,
+        size: pdfFontSize,
+        font,
+        color: rgb(0, 0, 0),
+      })
+    }
   }
 
   return pdf.save()
