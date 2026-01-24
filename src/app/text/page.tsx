@@ -21,6 +21,9 @@ interface TextItem {
   pageIndex: number
   transform: number[]
   edited: boolean
+  fontWeight: "normal" | "bold"
+  fontStyle: "normal" | "italic"
+  fontName: string
 }
 
 export default function TextPage() {
@@ -76,6 +79,11 @@ export default function TextPage() {
           const width = item.width * scale
           const height = fontSize * 1.2
 
+          const fontName = item.fontName || ""
+          const fontNameLower = fontName.toLowerCase()
+          const isBold = fontNameLower.includes("bold") || fontNameLower.includes("black") || fontNameLower.includes("heavy")
+          const isItalic = fontNameLower.includes("italic") || fontNameLower.includes("oblique")
+
           allTextItems.push({
             id: `${i - 1}-${allTextItems.length}`,
             str: item.str,
@@ -88,6 +96,9 @@ export default function TextPage() {
             pageIndex: i - 1,
             transform: tx,
             edited: false,
+            fontWeight: isBold ? "bold" : "normal",
+            fontStyle: isItalic ? "italic" : "normal",
+            fontName,
           })
         }
       }
@@ -209,26 +220,34 @@ export default function TextPage() {
                               onBlur={() => setEditingId(null)}
                               onKeyDown={(e) => e.key === "Enter" && setEditingId(null)}
                               autoFocus
-                              className="h-full w-full border-2 border-blue-500 bg-white px-0.5 outline-none"
+                              className="w-full border-2 border-blue-500 bg-white outline-none"
                               style={{
-                                fontSize: item.fontSize,
-                                lineHeight: 1,
-                                fontFamily: "Helvetica, Arial, sans-serif",
+                                fontSize: item.fontSize * 0.98,
+                                lineHeight: `${item.height}px`,
+                                height: item.height,
+                                fontFamily: "Arial, Helvetica, sans-serif",
+                                fontWeight: item.fontWeight,
+                                fontStyle: item.fontStyle,
                                 color: "#000",
+                                letterSpacing: "-0.01em",
+                                padding: 0,
                               }}
                             />
                           ) : (
                             <div
                               onClick={() => setEditingId(item.id)}
-                              className={`h-full cursor-text px-0.5 hover:bg-blue-100/50 ${
-                                item.edited ? "bg-yellow-200/70" : "bg-white/0"
+                              className={`cursor-text hover:bg-blue-100/30 ${
+                                item.edited ? "bg-white" : ""
                               }`}
                               style={{
-                                fontSize: item.fontSize,
-                                lineHeight: 1,
-                                fontFamily: "Helvetica, Arial, sans-serif",
-                                color: "transparent",
+                                fontSize: item.fontSize * 0.98,
+                                lineHeight: `${item.height}px`,
+                                fontFamily: "Arial, Helvetica, sans-serif",
+                                fontWeight: item.fontWeight,
+                                fontStyle: item.fontStyle,
+                                color: item.edited ? "#000" : "transparent",
                                 whiteSpace: "nowrap",
+                                letterSpacing: "-0.01em",
                               }}
                             >
                               {item.str}

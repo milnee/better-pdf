@@ -452,6 +452,9 @@ export interface EditedTextItem {
   fontSize: number
   pageIndex: number
   transform: number[]
+  fontWeight: "normal" | "bold"
+  fontStyle: "normal" | "italic"
+  fontName: string
 }
 
 export async function editPdfText(
@@ -460,7 +463,12 @@ export async function editPdfText(
   scale: number
 ): Promise<Uint8Array> {
   const pdf = await loadPdf(file)
-  const font = await pdf.embedFont(StandardFonts.Helvetica)
+
+  const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
+  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold)
+  const fontItalic = await pdf.embedFont(StandardFonts.HelveticaOblique)
+  const fontBoldItalic = await pdf.embedFont(StandardFonts.HelveticaBoldOblique)
+
   const pages = pdf.getPages()
 
   for (const item of editedItems) {
@@ -468,6 +476,15 @@ export async function editPdfText(
     if (!page) continue
 
     const { height: pageHeight } = page.getSize()
+
+    let font = fontRegular
+    if (item.fontWeight === "bold" && item.fontStyle === "italic") {
+      font = fontBoldItalic
+    } else if (item.fontWeight === "bold") {
+      font = fontBold
+    } else if (item.fontStyle === "italic") {
+      font = fontItalic
+    }
 
     const pdfX = item.x / scale
     const pdfY = pageHeight - (item.y / scale) - (item.fontSize / scale)
