@@ -137,7 +137,7 @@ export default function TextPage() {
     setDownloading(false)
   }, [file, textItems, scale])
 
-  const currentPageItems = textItems.filter((item) => item.pageIndex === currentPage && !(item.edited && item.str === ""))
+  const currentPageItems = textItems.filter((item) => item.pageIndex === currentPage)
   const hasEdits = textItems.some((item) => item.edited)
 
   return (
@@ -212,7 +212,12 @@ export default function TextPage() {
                             height: item.height,
                           }}
                         >
-                          {editingId === item.id ? (
+                          {item.edited && item.str === "" ? (
+                            <div
+                              className="bg-white h-full w-full"
+                              style={{ minWidth: item.width }}
+                            />
+                          ) : editingId === item.id ? (
                             <input
                               type="text"
                               value={item.str}
