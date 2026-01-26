@@ -2,7 +2,8 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ToolCard } from "@/components/layout/toolcard"
 import { RecentFiles } from "@/components/layout/recent"
-import { FileStack, Type, Image, Images, Eye, Minimize2, Droplets, PenTool, FileImage, ImageIcon, Scissors, Hash } from "lucide-react"
+import { GitHubStars } from "@/components/ui/github-stars"
+import { FileStack, Type, Image, Images, Eye, Minimize2, Droplets, PenTool, FileImage, ImageIcon, Scissors, Hash, RotateCw, Crop, Unlock } from "lucide-react"
 
 const faqJsonLd = {
   "@context": "https://schema.org",
@@ -124,6 +125,24 @@ const tools = [
     href: "/preview",
     icon: Eye,
   },
+  {
+    title: "rotate pdf",
+    description: "rotate pages 90, 180, or 270 degrees",
+    href: "/rotate",
+    icon: RotateCw,
+  },
+  {
+    title: "crop pdf",
+    description: "crop and trim pdf page margins",
+    href: "/crop",
+    icon: Crop,
+  },
+  {
+    title: "unlock pdf",
+    description: "remove password from protected pdfs",
+    href: "/unlock",
+    icon: Unlock,
+  },
 ]
 
 export default function Home() {
@@ -152,6 +171,9 @@ export default function Home() {
             <p className="mt-6 text-muted-foreground max-w-xl mx-auto">
               powerful tools that run entirely in your browser. your files never leave your device.
             </p>
+            <div className="mt-8">
+              <GitHubStars repo="milnee/better-pdf" />
+            </div>
           </div>
         </section>
 

@@ -1,4 +1,5 @@
 import { Github } from "lucide-react"
+import Link from "next/link"
 
 export function Footer() {
   return (
@@ -28,7 +29,15 @@ export function Footer() {
               source
             </a>
           </div>
-          <div>© {new Date().getFullYear()}</div>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-foreground transition-colors">
+              privacy
+            </Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">
+              terms
+            </Link>
+            <span>© {new Date().getFullYear()}</span>
+          </div>
         </div>
       </div>
     </footer>
