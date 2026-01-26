@@ -14,7 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/jpg-to-pdf", priority: 0.8 },
     { path: "/to-images", priority: 0.7 },
     { path: "/from-images", priority: 0.7 },
-    { path: "/protect", priority: 0.7 },
     { path: "/pagenumbers", priority: 0.7 },
     { path: "/preview", priority: 0.6 },
   ]

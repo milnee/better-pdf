@@ -2,7 +2,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ToolCard } from "@/components/layout/toolcard"
 import { RecentFiles } from "@/components/layout/recent"
-import { FileStack, Type, Image, Images, Eye, Minimize2, Droplets, PenTool, FileImage, ImageIcon, Scissors, Lock, Hash } from "lucide-react"
+import { FileStack, Type, Image, Images, Eye, Minimize2, Droplets, PenTool, FileImage, ImageIcon, Scissors, Hash } from "lucide-react"
 
 const faqJsonLd = {
   "@context": "https://schema.org",
@@ -111,12 +111,6 @@ const tools = [
     description: "combine multiple images into a single pdf",
     href: "/from-images",
     icon: Images,
-  },
-  {
-    title: "protect pdf",
-    description: "add or remove password protection",
-    href: "/protect",
-    icon: Lock,
   },
   {
     title: "page numbers",

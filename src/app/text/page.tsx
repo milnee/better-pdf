@@ -1406,7 +1406,7 @@ export default function TextPage() {
                       <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
                         <p className="text-white text-lg font-medium mb-4">This page is marked for deletion</p>
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           onClick={() => restorePage(currentPage)}
                         >
                           Restore Page
