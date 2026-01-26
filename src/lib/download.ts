@@ -10,7 +10,7 @@ export function downloadBlob(blob: Blob, filename: string): void {
 }
 
 export function downloadBytes(bytes: Uint8Array, filename: string, type = "application/pdf"): void {
-  const blob = new Blob([bytes], { type })
+  const blob = new Blob([new Uint8Array(bytes)], { type })
   downloadBlob(blob, filename)
 }
 

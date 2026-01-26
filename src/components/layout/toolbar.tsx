@@ -20,7 +20,7 @@ export function Toolbar({
   downloadLabel = "download",
 }: ToolbarProps) {
   return (
-    <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
+    <div className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
@@ -29,6 +29,7 @@ export function Toolbar({
               back
             </Link>
           </Button>
+          <div className="h-4 w-px bg-border" />
           <span className="font-medium">{title}</span>
         </div>
         {onDownload && (

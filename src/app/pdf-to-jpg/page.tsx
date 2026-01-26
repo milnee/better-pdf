@@ -92,7 +92,7 @@ export default function PdfToJpgPage() {
                   <div key={i} className="group relative overflow-hidden rounded-lg border">
                     <img src={img} alt={`page ${i + 1}`} className="w-full" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Button size="sm" variant="secondary" onClick={() => downloadSingle(img, i)}>
+                      <Button size="sm" variant="outline" onClick={() => downloadSingle(img, i)}>
                         <Download className="mr-1 h-3 w-3" /> page {i + 1}
                       </Button>
                     </div>

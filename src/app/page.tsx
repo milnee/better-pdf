@@ -1,7 +1,55 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ToolCard } from "@/components/layout/toolcard"
-import { FileStack, Type, Image, Images, Eye, Minimize2, Droplets, PenTool, FileImage, ImageIcon } from "lucide-react"
+import { RecentFiles } from "@/components/layout/recent"
+import { FileStack, Type, Image, Images, Eye, Minimize2, Droplets, PenTool, FileImage, ImageIcon, Scissors, Lock, Hash } from "lucide-react"
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Is Better PDF really free?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes, Better PDF is 100% free to use. All PDF tools are available without any cost, registration, or hidden fees.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Are my files safe and private?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Absolutely. Better PDF runs entirely in your browser. Your files never leave your device and are never uploaded to any server.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Do I need to create an account?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "No account or registration is required. Simply visit the website and start using any PDF tool immediately.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What PDF tools are available?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Better PDF offers: Merge PDFs, Split PDF, Compress PDF, Edit PDF, PDF to Images, Images to PDF, Add Watermark, Password Protection, and Add Page Numbers.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Does Better PDF work on mobile?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes, Better PDF is fully responsive and works on smartphones and tablets.",
+      },
+    },
+  ],
+}
 
 const tools = [
   {
@@ -15,6 +63,12 @@ const tools = [
     description: "edit text and add images to pdf documents",
     href: "/text",
     icon: Type,
+  },
+  {
+    title: "split pdf",
+    description: "extract specific pages into a new pdf",
+    href: "/split",
+    icon: Scissors,
   },
   {
     title: "compress pdf",
@@ -59,6 +113,18 @@ const tools = [
     icon: Images,
   },
   {
+    title: "protect pdf",
+    description: "add or remove password protection",
+    href: "/protect",
+    icon: Lock,
+  },
+  {
+    title: "page numbers",
+    description: "add page numbers to your pdf",
+    href: "/pagenumbers",
+    icon: Hash,
+  },
+  {
     title: "preview",
     description: "view and navigate through pdf documents",
     href: "/preview",
@@ -69,30 +135,40 @@ const tools = [
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <Header />
       <main className="flex-1">
-        <section className="container mx-auto px-4 py-16 md:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-              pdf tools that respect your privacy
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              your files never leave your device. all processing happens locally in your browser.
-            </p>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-500/10 px-4 py-2 text-sm text-green-600 dark:text-green-400">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+        <section className="container mx-auto px-4 pt-16 pb-8 md:pt-24 md:pb-12">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 border border-dashed px-3 py-1.5 text-xs uppercase tracking-widest text-muted-foreground mb-6">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
               </span>
-              100% client-side · zero uploads · open source
+              free · private · open source
             </div>
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+              a better way to
+              <br />
+              <span className="text-muted-foreground">work with pdfs</span>
+            </h1>
+            <p className="mt-6 text-muted-foreground max-w-xl mx-auto">
+              powerful tools that run entirely in your browser. your files never leave your device.
+            </p>
           </div>
+        </section>
 
-          <div className="mx-auto mt-16 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <section className="container mx-auto px-4 py-12 md:py-16">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {tools.map((tool) => (
               <ToolCard key={tool.href} {...tool} />
             ))}
           </div>
+
+          <RecentFiles />
         </section>
       </main>
       <Footer />

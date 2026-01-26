@@ -455,6 +455,121 @@ export interface EditedTextItem {
   fontWeight: "normal" | "bold"
   fontStyle: "normal" | "italic"
   fontName: string
+  pdfX: number
+  pdfY: number
+  pdfFontSize: number
+  pdfWidth: number
+}
+
+interface TextSegment {
+  text: string
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  color: string
+  fontFamily: string
+  fontSize: number | null
+  backgroundColor: string | null
+}
+
+function parseHtmlToSegments(html: string): TextSegment[] {
+  const segments: TextSegment[] = []
+  const div = typeof document !== "undefined" ? document.createElement("div") : null
+
+  if (!div) {
+    return [{ text: html.replace(/<[^>]*>/g, ""), bold: false, italic: false, underline: false, color: "#000000", fontFamily: "Helvetica", fontSize: null, backgroundColor: null }]
+  }
+
+  div.innerHTML = html
+
+  function traverse(node: Node, bold: boolean, italic: boolean, underline: boolean, color: string, fontFamily: string, fontSize: number | null, backgroundColor: string | null) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || ""
+      if (text) {
+        segments.push({ text, bold, italic, underline, color, fontFamily, fontSize, backgroundColor })
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as Element
+      const tagName = el.tagName.toLowerCase()
+      const newBold = bold || tagName === "b" || tagName === "strong"
+      const newItalic = italic || tagName === "i" || tagName === "em"
+      const newUnderline = underline || tagName === "u"
+
+      let newColor = color
+      let newFontFamily = fontFamily
+      let newFontSize = fontSize
+      let newBackgroundColor = backgroundColor
+
+      if (tagName === "font") {
+        if (el.getAttribute("color")) {
+          newColor = el.getAttribute("color") || color
+        }
+        if (el.getAttribute("face")) {
+          newFontFamily = el.getAttribute("face") || fontFamily
+        }
+      }
+      if (tagName === "span") {
+        const style = el.getAttribute("style") || ""
+        const colorMatch = style.match(/color:\s*([^;]+)/)
+        if (colorMatch) {
+          newColor = colorMatch[1].trim()
+        }
+        const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/)
+        if (fontFamilyMatch) {
+          newFontFamily = fontFamilyMatch[1].trim().replace(/['"]/g, "")
+        }
+        const fontSizeMatch = style.match(/font-size:\s*(\d+(?:\.\d+)?)\s*px/)
+        if (fontSizeMatch) {
+          newFontSize = parseFloat(fontSizeMatch[1])
+        }
+        const bgColorMatch = style.match(/background-color:\s*([^;]+)/)
+        if (bgColorMatch) {
+          const bgColor = bgColorMatch[1].trim()
+          if (bgColor !== "transparent" && bgColor !== "rgba(0, 0, 0, 0)") {
+            newBackgroundColor = bgColor
+          } else {
+            newBackgroundColor = null
+          }
+        }
+      }
+
+      for (const child of Array.from(node.childNodes)) {
+        traverse(child, newBold, newItalic, newUnderline, newColor, newFontFamily, newFontSize, newBackgroundColor)
+      }
+    }
+  }
+
+  traverse(div, false, false, false, "#000000", "Helvetica", null, null)
+  return segments
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (result) {
+    return {
+      r: parseInt(result[1], 16) / 255,
+      g: parseInt(result[2], 16) / 255,
+      b: parseInt(result[3], 16) / 255,
+    }
+  }
+  const rgbMatch = hex.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+  if (rgbMatch) {
+    return {
+      r: parseInt(rgbMatch[1]) / 255,
+      g: parseInt(rgbMatch[2]) / 255,
+      b: parseInt(rgbMatch[3]) / 255,
+    }
+  }
+  return { r: 0, g: 0, b: 0 }
+}
+
+function getPlainTextFromHtml(html: string): string {
+  if (typeof document === "undefined") {
+    return html.replace(/<[^>]*>/g, "")
+  }
+  const div = document.createElement("div")
+  div.innerHTML = html
+  return div.textContent || ""
 }
 
 export async function editPdfText(
@@ -463,52 +578,94 @@ export async function editPdfText(
   scale: number
 ): Promise<Uint8Array> {
   const pdf = await loadPdf(file)
-
-  const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
-  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold)
-  const fontItalic = await pdf.embedFont(StandardFonts.HelveticaOblique)
-  const fontBoldItalic = await pdf.embedFont(StandardFonts.HelveticaBoldOblique)
-
   const pages = pdf.getPages()
+
+  const helvetica = await pdf.embedFont(StandardFonts.Helvetica)
+  const helveticaBold = await pdf.embedFont(StandardFonts.HelveticaBold)
+  const helveticaItalic = await pdf.embedFont(StandardFonts.HelveticaOblique)
+  const helveticaBoldItalic = await pdf.embedFont(StandardFonts.HelveticaBoldOblique)
+
+  const timesRoman = await pdf.embedFont(StandardFonts.TimesRoman)
+  const timesRomanBold = await pdf.embedFont(StandardFonts.TimesRomanBold)
+  const timesRomanItalic = await pdf.embedFont(StandardFonts.TimesRomanItalic)
+  const timesRomanBoldItalic = await pdf.embedFont(StandardFonts.TimesRomanBoldItalic)
+
+  const courier = await pdf.embedFont(StandardFonts.Courier)
+  const courierBold = await pdf.embedFont(StandardFonts.CourierBold)
+  const courierItalic = await pdf.embedFont(StandardFonts.CourierOblique)
+  const courierBoldItalic = await pdf.embedFont(StandardFonts.CourierBoldOblique)
+
+  const fontMap: Record<string, { normal: typeof helvetica; bold: typeof helvetica; italic: typeof helvetica; boldItalic: typeof helvetica }> = {
+    helvetica: { normal: helvetica, bold: helveticaBold, italic: helveticaItalic, boldItalic: helveticaBoldItalic },
+    arial: { normal: helvetica, bold: helveticaBold, italic: helveticaItalic, boldItalic: helveticaBoldItalic },
+    verdana: { normal: helvetica, bold: helveticaBold, italic: helveticaItalic, boldItalic: helveticaBoldItalic },
+    "times new roman": { normal: timesRoman, bold: timesRomanBold, italic: timesRomanItalic, boldItalic: timesRomanBoldItalic },
+    times: { normal: timesRoman, bold: timesRomanBold, italic: timesRomanItalic, boldItalic: timesRomanBoldItalic },
+    georgia: { normal: timesRoman, bold: timesRomanBold, italic: timesRomanItalic, boldItalic: timesRomanBoldItalic },
+    courier: { normal: courier, bold: courierBold, italic: courierItalic, boldItalic: courierBoldItalic },
+    "courier new": { normal: courier, bold: courierBold, italic: courierItalic, boldItalic: courierBoldItalic },
+    monospace: { normal: courier, bold: courierBold, italic: courierItalic, boldItalic: courierBoldItalic },
+  }
+
+  function getFont(fontFamily: string, bold: boolean, italic: boolean) {
+    const family = fontMap[fontFamily.toLowerCase()] || fontMap.helvetica
+    if (bold && italic) return family.boldItalic
+    if (bold) return family.bold
+    if (italic) return family.italic
+    return family.normal
+  }
 
   for (const item of editedItems) {
     const page = pages[item.pageIndex]
     if (!page) continue
 
-    const { height: pageHeight } = page.getSize()
-
-    let font = fontRegular
-    if (item.fontWeight === "bold" && item.fontStyle === "italic") {
-      font = fontBoldItalic
-    } else if (item.fontWeight === "bold") {
-      font = fontBold
-    } else if (item.fontStyle === "italic") {
-      font = fontItalic
-    }
-
-    const pdfX = item.x / scale
-    const pdfY = pageHeight - (item.y / scale) - (item.fontSize / scale)
-    const pdfFontSize = item.fontSize / scale
-
-    const originalWidth = font.widthOfTextAtSize(item.originalStr, pdfFontSize)
-    const originalHeight = pdfFontSize * 1.3
+    const pdfX = item.pdfX
+    const pdfY = item.pdfY
+    const pdfFontSize = item.pdfFontSize
+    const originalWidth = item.pdfWidth + 20
+    const originalHeight = pdfFontSize * 1.4
 
     page.drawRectangle({
-      x: pdfX - 1,
-      y: pdfY - 2,
-      width: originalWidth + 2,
-      height: originalHeight + 2,
+      x: pdfX - 2,
+      y: pdfY - pdfFontSize * 0.3,
+      width: originalWidth,
+      height: originalHeight,
       color: rgb(1, 1, 1),
     })
 
-    if (item.str.trim()) {
-      page.drawText(item.str, {
-        x: pdfX,
+    const plainText = getPlainTextFromHtml(item.str)
+    if (!plainText.trim()) continue
+
+    const segments = parseHtmlToSegments(item.str)
+    let currentX = pdfX
+
+    for (const segment of segments) {
+      if (!segment.text) continue
+
+      const font = getFont(segment.fontFamily, segment.bold, segment.italic)
+      const segmentFontSize = segment.fontSize !== null ? segment.fontSize : pdfFontSize
+
+      const textColor = hexToRgb(segment.color)
+      const textWidth = font.widthOfTextAtSize(segment.text, segmentFontSize)
+
+      page.drawText(segment.text, {
+        x: currentX,
         y: pdfY,
-        size: pdfFontSize,
+        size: segmentFontSize,
         font,
-        color: rgb(0, 0, 0),
+        color: rgb(textColor.r, textColor.g, textColor.b),
       })
+
+      if (segment.underline) {
+        page.drawLine({
+          start: { x: currentX, y: pdfY - 2 },
+          end: { x: currentX + textWidth, y: pdfY - 2 },
+          thickness: segmentFontSize * 0.05,
+          color: rgb(textColor.r, textColor.g, textColor.b),
+        })
+      }
+
+      currentX += textWidth
     }
   }
 
@@ -548,6 +705,230 @@ export async function addSignature(
     })
   } catch (e) {
     console.error("failed to add signature", e)
+  }
+
+  return pdf.save()
+}
+
+interface SignatureAnnotation {
+  id: string
+  dataUrl: string
+  x: number
+  y: number
+  width: number
+  height: number
+  pageIndex: number
+  pdfX: number
+  pdfY: number
+  pdfWidth: number
+  pdfHeight: number
+}
+
+interface ImageAnnotation {
+  id: string
+  dataUrl: string
+  x: number
+  y: number
+  width: number
+  height: number
+  pageIndex: number
+  pdfX: number
+  pdfY: number
+  pdfWidth: number
+  pdfHeight: number
+}
+
+export async function editPdfWithAnnotations(
+  file: File,
+  editedItems: EditedTextItem[],
+  signatures: SignatureAnnotation[],
+  images: ImageAnnotation[],
+  scale: number,
+  pageRotations: Record<number, number> = {},
+  deletedPages: Set<number> = new Set(),
+  pageOrder: number[] = []
+): Promise<Uint8Array> {
+  const pdf = await loadPdf(file)
+  const pages = pdf.getPages()
+
+  const helvetica = await pdf.embedFont(StandardFonts.Helvetica)
+  const helveticaBold = await pdf.embedFont(StandardFonts.HelveticaBold)
+  const helveticaItalic = await pdf.embedFont(StandardFonts.HelveticaOblique)
+  const helveticaBoldItalic = await pdf.embedFont(StandardFonts.HelveticaBoldOblique)
+
+  const timesRoman = await pdf.embedFont(StandardFonts.TimesRoman)
+  const timesRomanBold = await pdf.embedFont(StandardFonts.TimesRomanBold)
+  const timesRomanItalic = await pdf.embedFont(StandardFonts.TimesRomanItalic)
+  const timesRomanBoldItalic = await pdf.embedFont(StandardFonts.TimesRomanBoldItalic)
+
+  const courier = await pdf.embedFont(StandardFonts.Courier)
+  const courierBold = await pdf.embedFont(StandardFonts.CourierBold)
+  const courierItalic = await pdf.embedFont(StandardFonts.CourierOblique)
+  const courierBoldItalic = await pdf.embedFont(StandardFonts.CourierBoldOblique)
+
+  const fontMap: Record<string, { normal: typeof helvetica; bold: typeof helvetica; italic: typeof helvetica; boldItalic: typeof helvetica }> = {
+    helvetica: { normal: helvetica, bold: helveticaBold, italic: helveticaItalic, boldItalic: helveticaBoldItalic },
+    arial: { normal: helvetica, bold: helveticaBold, italic: helveticaItalic, boldItalic: helveticaBoldItalic },
+    verdana: { normal: helvetica, bold: helveticaBold, italic: helveticaItalic, boldItalic: helveticaBoldItalic },
+    "times new roman": { normal: timesRoman, bold: timesRomanBold, italic: timesRomanItalic, boldItalic: timesRomanBoldItalic },
+    times: { normal: timesRoman, bold: timesRomanBold, italic: timesRomanItalic, boldItalic: timesRomanBoldItalic },
+    georgia: { normal: timesRoman, bold: timesRomanBold, italic: timesRomanItalic, boldItalic: timesRomanBoldItalic },
+    courier: { normal: courier, bold: courierBold, italic: courierItalic, boldItalic: courierBoldItalic },
+    "courier new": { normal: courier, bold: courierBold, italic: courierItalic, boldItalic: courierBoldItalic },
+    monospace: { normal: courier, bold: courierBold, italic: courierItalic, boldItalic: courierBoldItalic },
+  }
+
+  function getFont(fontFamily: string, bold: boolean, italic: boolean) {
+    const family = fontMap[fontFamily.toLowerCase()] || fontMap.helvetica
+    if (bold && italic) return family.boldItalic
+    if (bold) return family.bold
+    if (italic) return family.italic
+    return family.normal
+  }
+
+  for (const item of editedItems) {
+    const page = pages[item.pageIndex]
+    if (!page) continue
+
+    const pdfX = item.pdfX
+    const pdfY = item.pdfY
+    const pdfFontSize = item.pdfFontSize
+    const originalWidth = item.pdfWidth + 20
+    const originalHeight = pdfFontSize * 1.4
+
+    page.drawRectangle({
+      x: pdfX - 2,
+      y: pdfY - pdfFontSize * 0.3,
+      width: originalWidth,
+      height: originalHeight,
+      color: rgb(1, 1, 1),
+    })
+
+    const plainText = getPlainTextFromHtml(item.str)
+    if (!plainText.trim()) continue
+
+    const segments = parseHtmlToSegments(item.str)
+    let currentX = pdfX
+
+    for (const segment of segments) {
+      if (!segment.text) continue
+
+      const sanitizedText = segment.text.replace(/[^\x00-\xFF]/g, "")
+      if (!sanitizedText) continue
+
+      try {
+        const font = getFont(segment.fontFamily, segment.bold, segment.italic)
+        const segmentFontSize = segment.fontSize !== null ? segment.fontSize : pdfFontSize
+
+        const textColor = hexToRgb(segment.color)
+        const textWidth = font.widthOfTextAtSize(sanitizedText, segmentFontSize)
+
+        if (segment.backgroundColor) {
+          const bgColor = hexToRgb(segment.backgroundColor)
+          page.drawRectangle({
+            x: currentX,
+            y: pdfY - segmentFontSize * 0.2,
+            width: textWidth,
+            height: segmentFontSize * 1.2,
+            color: rgb(bgColor.r, bgColor.g, bgColor.b),
+            opacity: 0.5,
+          })
+        }
+
+        page.drawText(sanitizedText, {
+          x: currentX,
+          y: pdfY,
+          size: segmentFontSize,
+          font,
+          color: rgb(textColor.r, textColor.g, textColor.b),
+        })
+
+        if (segment.underline) {
+          page.drawLine({
+            start: { x: currentX, y: pdfY - 2 },
+            end: { x: currentX + textWidth, y: pdfY - 2 },
+            thickness: segmentFontSize * 0.05,
+            color: rgb(textColor.r, textColor.g, textColor.b),
+          })
+        }
+
+        currentX += textWidth
+      } catch (e) {
+        console.error("failed to render text segment", e)
+      }
+    }
+  }
+
+  for (const sig of signatures) {
+    const page = pages[sig.pageIndex]
+    if (!page) continue
+
+    try {
+      const base64Data = sig.dataUrl.split(",")[1]
+      const bytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))
+      const embedded = await pdf.embedPng(bytes)
+
+      page.drawImage(embedded, {
+        x: sig.pdfX,
+        y: sig.pdfY,
+        width: sig.pdfWidth,
+        height: sig.pdfHeight,
+      })
+    } catch (e) {
+      console.error("failed to embed signature", e)
+    }
+  }
+
+  for (const img of images) {
+    const page = pages[img.pageIndex]
+    if (!page) continue
+
+    try {
+      const base64Data = img.dataUrl.split(",")[1]
+      const bytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))
+
+      let embedded
+      if (img.dataUrl.includes("image/png")) {
+        embedded = await pdf.embedPng(bytes)
+      } else if (img.dataUrl.includes("image/jpeg") || img.dataUrl.includes("image/jpg")) {
+        embedded = await pdf.embedJpg(bytes)
+      } else {
+        embedded = await pdf.embedPng(bytes)
+      }
+
+      page.drawImage(embedded, {
+        x: img.pdfX,
+        y: img.pdfY,
+        width: img.pdfWidth,
+        height: img.pdfHeight,
+      })
+    } catch (e) {
+      console.error("failed to embed image", e)
+    }
+  }
+
+  for (const [pageIndexStr, rotation] of Object.entries(pageRotations)) {
+    const pageIndex = parseInt(pageIndexStr)
+    const page = pages[pageIndex]
+    if (!page || rotation === 0) continue
+    page.setRotation(degrees(rotation))
+  }
+
+  const hasReorder = pageOrder.length > 0 && pageOrder.some((p, i) => p !== i)
+
+  if (hasReorder || deletedPages.size > 0) {
+    const finalPdf = await PDFDocument.create()
+    const effectiveOrder = hasReorder ? pageOrder : Array.from({ length: pdf.getPageCount() }, (_, i) => i)
+    const indicesToCopy = effectiveOrder.filter(idx => !deletedPages.has(idx))
+
+    if (indicesToCopy.length > 0) {
+      const copiedPages = await finalPdf.copyPages(pdf, indicesToCopy)
+      for (const page of copiedPages) {
+        finalPdf.addPage(page)
+      }
+    }
+
+    return finalPdf.save()
   }
 
   return pdf.save()

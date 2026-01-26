@@ -6,6 +6,7 @@ import { Dropzone } from "@/components/ui/dropzone"
 import { Button } from "@/components/ui/button"
 import { loadPdf } from "@/lib/pdf"
 import { downloadBytes } from "@/lib/download"
+import { addRecentFile } from "@/components/layout/recent"
 import { FileDown } from "lucide-react"
 
 export default function CompressPage() {
@@ -32,6 +33,7 @@ export default function CompressPage() {
       })
       setCompressedData(compressed)
       setCompressedSize(compressed.length)
+      addRecentFile({ name: f.name, size: f.size }, "compress", "/compress")
     } catch (e) {
       console.error("failed to compress", e)
     }

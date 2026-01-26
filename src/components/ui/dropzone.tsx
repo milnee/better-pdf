@@ -115,8 +115,8 @@ export function Dropzone({
       onDrop={handleDrop}
       onPaste={handlePaste}
       className={cn(
-        "relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-        isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-muted-foreground/50",
+        "relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        isDragging ? "border-foreground bg-muted" : "border-muted-foreground/25 hover:border-muted-foreground/50",
         error && "border-destructive",
         className
       )}
