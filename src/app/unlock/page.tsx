@@ -6,15 +6,12 @@ import { Dropzone } from "@/components/ui/dropzone"
 import { Button } from "@/components/ui/button"
 import { downloadBytes } from "@/lib/download"
 import { addRecentFile } from "@/components/layout/recent"
-import { FileDown, Lock, Unlock, Eye, EyeOff } from "lucide-react"
+import { FileDown, Lock, Unlock, AlertCircle } from "lucide-react"
 import { PDFDocument } from "pdf-lib"
 
 export default function UnlockPage() {
   const [file, setFile] = useState<File | null>(null)
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
   const [unlocking, setUnlocking] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null)
@@ -24,7 +21,6 @@ export default function UnlockPage() {
     if (!f) return
 
     setFile(f)
-    setPassword("")
     setError("")
     setUnlocked(false)
     setPdfBytes(null)
@@ -41,7 +37,6 @@ export default function UnlockPage() {
       const buffer = await file.arrayBuffer()
 
       const pdfDoc = await PDFDocument.load(buffer, {
-        password: password || undefined,
         ignoreEncryption: true,
       })
 
@@ -50,10 +45,10 @@ export default function UnlockPage() {
       setUnlocked(true)
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : "unknown error"
-      if (errorMessage.includes("password") || errorMessage.includes("encrypted")) {
-        setError("incorrect password. please try again.")
+      if (errorMessage.includes("encrypted") || errorMessage.includes("password")) {
+        setError("this pdf requires a password to open. this tool can only remove editing/printing restrictions, not open passwords.")
       } else {
-        setError("failed to unlock pdf. the file may be corrupted or use unsupported encryption.")
+        setError("failed to process pdf. the file may be corrupted.")
       }
       console.error("failed to unlock pdf", e)
     }
@@ -68,7 +63,6 @@ export default function UnlockPage() {
 
   const reset = () => {
     setFile(null)
-    setPassword("")
     setError("")
     setUnlocked(false)
     setPdfBytes(null)
@@ -83,8 +77,8 @@ export default function UnlockPage() {
           <div className="mx-auto max-w-2xl">
             <Dropzone onFiles={handleFile} accept=".pdf" />
             <div className="mt-8 text-center text-sm text-muted-foreground">
-              <p>upload a password-protected pdf to remove its password.</p>
-              <p className="mt-2 text-xs">you must know the password to unlock the pdf.</p>
+              <p>remove restrictions from pdfs (printing, editing, copying).</p>
+              <p className="mt-2 text-xs">works with pdfs that have owner passwords, not open passwords.</p>
             </div>
           </div>
         ) : (
@@ -104,39 +98,10 @@ export default function UnlockPage() {
 
               {!unlocked ? (
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      enter pdf password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                        placeholder="password"
-                        className="w-full h-10 px-3 pr-10 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      leave empty if the pdf only has restrictions (no open password)
-                    </p>
-                  </div>
-
                   {error && (
-                    <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-500">
-                      {error}
+                    <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-500 flex gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span>{error}</span>
                     </div>
                   )}
 
@@ -146,16 +111,16 @@ export default function UnlockPage() {
                     className="w-full"
                   >
                     <Unlock className="mr-2 h-4 w-4" />
-                    {unlocking ? "unlocking..." : "unlock pdf"}
+                    {unlocking ? "removing restrictions..." : "remove restrictions"}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4 text-center">
                     <Unlock className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                    <p className="font-medium text-green-500">pdf unlocked successfully</p>
+                    <p className="font-medium text-green-500">restrictions removed</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      the password protection has been removed
+                      you can now edit, print, and copy from this pdf
                     </p>
                   </div>
 
@@ -174,12 +139,17 @@ export default function UnlockPage() {
             </div>
 
             <div className="mt-6 rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground mb-2">how it works</p>
+              <p className="font-medium text-foreground mb-2">what this removes</p>
               <ul className="space-y-1 text-xs">
-                <li>• your pdf is processed entirely in your browser</li>
-                <li>• the file is never uploaded to any server</li>
-                <li>• you must provide the correct password</li>
-                <li>• this tool cannot crack or bypass passwords</li>
+                <li>• printing restrictions</li>
+                <li>• editing/modification restrictions</li>
+                <li>• copy/paste restrictions</li>
+                <li>• form filling restrictions</li>
+              </ul>
+              <p className="font-medium text-foreground mt-4 mb-2">what this cannot do</p>
+              <ul className="space-y-1 text-xs">
+                <li>• remove passwords required to open a pdf</li>
+                <li>• crack or bypass unknown passwords</li>
               </ul>
             </div>
           </div>
