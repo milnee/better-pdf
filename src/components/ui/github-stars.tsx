@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Star } from "lucide-react"
+import { Github, Star } from "lucide-react"
 
 interface GitHubStarsProps {
   repo: string
@@ -33,13 +33,14 @@ export function GitHubStars({ repo }: GitHubStarsProps) {
       href={`https://github.com/${repo}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background hover:bg-muted transition-colors text-sm"
+      className="inline-flex items-center gap-2 h-10 px-4 rounded-md border bg-background hover:bg-muted transition-colors text-sm font-medium"
     >
-      <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
-      <span className="font-medium">
+      <Github className="h-4 w-4" />
+      <span>Star</span>
+      <span className="flex items-center gap-1 pl-2 border-l text-muted-foreground">
+        <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
         {stars !== null ? stars.toLocaleString() : "—"}
       </span>
-      <span className="text-muted-foreground">stars on GitHub</span>
     </a>
   )
 }
