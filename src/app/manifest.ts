@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Free PDF tools that work 100% in your browser. No uploads, complete privacy.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0f172a",
-    theme_color: "#3B82F6",
+    background_color: "#0a0a0a",
+    theme_color: "#0a0a0a",
     icons: [
       {
         src: "/icon.svg",
