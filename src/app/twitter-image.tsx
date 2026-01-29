@@ -19,7 +19,7 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
+          background: "#0a0a0a",
           fontFamily: "system-ui, sans-serif",
         }}
       >
@@ -31,40 +31,28 @@ export default async function Image() {
             marginBottom: "40px",
           }}
         >
-          <div
-            style={{
-              width: "80px",
-              height: "80px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-              borderRadius: "20px",
-              marginRight: "24px",
-            }}
-          >
-            <svg width="50" height="50" viewBox="0 0 32 32" fill="none">
-              <rect x="4" y="2" width="24" height="28" rx="3" fill="white" fillOpacity="0.95" />
-              <path d="M20 2V8C20 9.1 20.9 10 22 10H28L20 2Z" fill="white" fillOpacity="0.7" />
-              <rect x="8" y="14" width="16" height="2" rx="1" fill="#3B82F6" fillOpacity="0.5" />
-              <rect x="8" y="19" width="12" height="2" rx="1" fill="#3B82F6" fillOpacity="0.5" />
-              <rect x="8" y="24" width="14" height="2" rx="1" fill="#3B82F6" fillOpacity="0.5" />
-            </svg>
-          </div>
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" rx="4" fill="#fafafa" />
+            <path d="M8 7h4.5a2.5 2.5 0 0 1 0 5H8V7z" fill="#0a0a0a" />
+            <path d="M8 12h5a2.5 2.5 0 0 1 0 5H8v-5z" fill="#0a0a0a" />
+            <rect x="8" y="7" width="2" height="10" fill="#0a0a0a" />
+          </svg>
           <span
             style={{
               fontSize: "64px",
               fontWeight: "bold",
-              color: "white",
+              color: "#fafafa",
+              marginLeft: "24px",
+              letterSpacing: "-0.02em",
             }}
           >
-            Better PDF
+            BETTER PDF
           </span>
         </div>
         <p
           style={{
             fontSize: "32px",
-            color: "#94A3B8",
+            color: "#737373",
             textAlign: "center",
             maxWidth: "800px",
             margin: "0",
