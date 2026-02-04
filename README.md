@@ -18,7 +18,7 @@
 <br />
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/milnee/better-pdf/main/preview.png?v=2" alt="Better PDF Preview" width="100%" />
+  <img src="https://raw.githubusercontent.com/milnee/better-pdf/main/preview.png?v=3" alt="Better PDF Preview" width="100%" />
 </p>
 
 ## Why Better PDF?
