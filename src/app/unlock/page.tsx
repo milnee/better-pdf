@@ -58,35 +58,27 @@ export default function UnlockPage() {
       }
 
       try {
-        const pdfDoc = await PDFDocument.load(buffer, { password })
-        const unlockedBytes = await pdfDoc.save()
+        const pdf = await loadPdfFromBytes(data, password)
+        const newPdf = await PDFDocument.create()
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const viewport = page.getViewport({ scale: 2 })
+          const canvas = await renderPage(page, { scale: 2 })
+          const imgData = canvas.toDataURL("image/jpeg", 0.95)
+          const base64 = imgData.split(",")[1]
+          const imgBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
+          const img = await newPdf.embedJpg(imgBytes)
+          const newPage = newPdf.addPage([viewport.width / 2, viewport.height / 2])
+          newPage.drawImage(img, { x: 0, y: 0, width: viewport.width / 2, height: viewport.height / 2 })
+        }
+
+        const unlockedBytes = await newPdf.save()
         setPdfBytes(unlockedBytes)
         setUnlocked(true)
         setNeedsPassword(false)
       } catch {
-        try {
-          const pdf = await loadPdfFromBytes(data, password)
-          const newPdf = await PDFDocument.create()
-
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i)
-            const viewport = page.getViewport({ scale: 2 })
-            const canvas = await renderPage(page, { scale: 2 })
-            const imgData = canvas.toDataURL("image/jpeg", 0.95)
-            const base64 = imgData.split(",")[1]
-            const imgBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
-            const img = await newPdf.embedJpg(imgBytes)
-            const newPage = newPdf.addPage([viewport.width / 2, viewport.height / 2])
-            newPage.drawImage(img, { x: 0, y: 0, width: viewport.width / 2, height: viewport.height / 2 })
-          }
-
-          const unlockedBytes = await newPdf.save()
-          setPdfBytes(unlockedBytes)
-          setUnlocked(true)
-          setNeedsPassword(false)
-        } catch {
-          setError("incorrect password. please try again.")
-        }
+        setError("incorrect password. please try again.")
       }
     } catch {
       setError("failed to process pdf. the file may be corrupted.")
