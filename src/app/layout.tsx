@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
+import { Analytics } from "@vercel/analytics/react"
 import "./globals.css"
 import { ThemeProvider } from "@/components/providers/theme"
 import { Toaster } from "@/components/ui/toast"
@@ -171,6 +172,7 @@ export default function RootLayout({
           <div className="flex min-h-screen flex-col">{children}</div>
           <Toaster />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
