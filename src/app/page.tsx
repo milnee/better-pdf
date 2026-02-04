@@ -75,6 +75,7 @@ const tools = [
   { title: "rotate pdf", description: "rotate pages 90, 180, or 270 degrees", href: "/rotate", icon: RotateCw },
   { title: "crop pdf", description: "crop and trim pdf page margins", href: "/crop", icon: Crop },
   { title: "unlock pdf", description: "remove password from protected pdfs", href: "/unlock", icon: Unlock },
+  { title: "protect pdf", description: "add password protection to pdfs", href: "/protect", icon: Lock },
 ]
 
 const features = [
@@ -114,7 +115,7 @@ export default function Home() {
 
       <div className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm">
-          <span className="text-muted-foreground">15 free PDF tools, zero uploads</span>
+          <span className="text-muted-foreground">16 free PDF tools, zero uploads</span>
           <Link href="#tools" className="text-blue-500 hover:text-blue-400 font-medium flex items-center gap-1 transition-colors">
             Explore tools <ArrowRight className="h-3 w-3" />
           </Link>

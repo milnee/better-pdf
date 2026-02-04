@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/rotate", priority: 0.8 },
     { path: "/crop", priority: 0.8 },
     { path: "/unlock", priority: 0.8 },
+    { path: "/protect", priority: 0.8 },
     { path: "/watermark", priority: 0.8 },
     { path: "/sign", priority: 0.8 },
     { path: "/pdf-to-jpg", priority: 0.8 },

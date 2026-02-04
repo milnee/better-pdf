@@ -414,11 +414,13 @@ export async function createPdfWithImages(
   return pdf.save()
 }
 
+export type WatermarkPattern = "single" | "diagonal"
+
 export async function addWatermark(
   file: File,
-  options: { text: string; opacity?: number; fontSize?: number }
+  options: { text: string; opacity?: number; fontSize?: number; pattern?: WatermarkPattern }
 ): Promise<Uint8Array> {
-  const { text, opacity = 0.3, fontSize = 48 } = options
+  const { text, opacity = 0.3, fontSize = 48, pattern = "single" } = options
   const pdf = await loadPdf(file)
   const font = await pdf.embedFont(StandardFonts.Helvetica)
   const pages = pdf.getPages()
@@ -427,15 +429,39 @@ export async function addWatermark(
     const { width, height } = page.getSize()
     const textWidth = font.widthOfTextAtSize(text, fontSize)
 
-    page.drawText(text, {
-      x: (width - textWidth) / 2,
-      y: height / 2,
-      size: fontSize,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-      opacity,
-      rotate: degrees(-45),
-    })
+    if (pattern === "single") {
+      const singleSize = fontSize * 1.5
+      const singleTextWidth = font.widthOfTextAtSize(text, singleSize)
+      page.drawText(text, {
+        x: (width - singleTextWidth * 0.7) / 2,
+        y: height / 2,
+        size: singleSize,
+        font,
+        color: rgb(0.5, 0.5, 0.5),
+        opacity,
+        rotate: degrees(-45),
+      })
+    } else if (pattern === "diagonal") {
+      const spacingX = textWidth + 80
+      const spacingY = fontSize * 3
+      const cols = Math.ceil(width / spacingX) + 2
+      const rows = Math.ceil(height / spacingY) + 2
+
+      for (let row = -1; row <= rows; row++) {
+        const offsetX = row % 2 === 0 ? 0 : spacingX / 2
+        for (let col = -1; col <= cols; col++) {
+          page.drawText(text, {
+            x: col * spacingX + offsetX,
+            y: row * spacingY,
+            size: fontSize,
+            font,
+            color: rgb(0.5, 0.5, 0.5),
+            opacity,
+            rotate: degrees(-45),
+          })
+        }
+      }
+    }
   }
 
   return pdf.save()

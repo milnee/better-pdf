@@ -9,36 +9,51 @@ import { downloadBytes } from "@/lib/download"
 import { addRecentFile } from "@/components/layout/recent"
 import { FileDown } from "lucide-react"
 
+type CompressionLevel = "light" | "medium" | "heavy"
+
 export default function CompressPage() {
   const [file, setFile] = useState<File | null>(null)
   const [originalSize, setOriginalSize] = useState(0)
   const [compressedSize, setCompressedSize] = useState(0)
   const [compressedData, setCompressedData] = useState<Uint8Array | null>(null)
   const [loading, setLoading] = useState(false)
+  const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>("medium")
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
 
-  const handleFile = useCallback(async (files: File[]) => {
-    const f = files[0]
-    if (!f) return
-
+  const compress = useCallback(async (f: File, level: CompressionLevel) => {
     setLoading(true)
     setFile(f)
     setOriginalSize(f.size)
+    setCompressedData(null)
 
     try {
       const pdf = await loadPdf(f)
       const compressed = await pdf.save({
-        useObjectStreams: true,
+        useObjectStreams: level !== "light",
         addDefaultPage: false,
-        objectsPerTick: 50,
+        objectsPerTick: level === "heavy" ? 20 : level === "medium" ? 50 : 100,
       })
       setCompressedData(compressed)
       setCompressedSize(compressed.length)
       addRecentFile({ name: f.name, size: f.size }, "compress", "/compress")
-    } catch (e) {
-      console.error("failed to compress", e)
+    } catch {
     }
     setLoading(false)
   }, [])
+
+  const handleFile = useCallback(async (files: File[]) => {
+    const f = files[0]
+    if (!f) return
+    setPendingFile(f)
+    compress(f, compressionLevel)
+  }, [compress, compressionLevel])
+
+  const handleLevelChange = (level: CompressionLevel) => {
+    setCompressionLevel(level)
+    if (pendingFile) {
+      compress(pendingFile, level)
+    }
+  }
 
   const handleDownload = () => {
     if (!compressedData || !file) return
@@ -61,6 +76,33 @@ export default function CompressPage() {
       <main className="container mx-auto flex-1 px-4 py-8">
         <div className="mx-auto max-w-2xl">
           <Dropzone onFiles={handleFile} accept=".pdf" />
+
+          {pendingFile && (
+            <div className="mt-6 space-y-3">
+              <label className="text-sm font-medium">compression level</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["light", "medium", "heavy"] as const).map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => handleLevelChange(level)}
+                    disabled={loading}
+                    className={`rounded-lg border px-4 py-3 text-sm transition-colors ${
+                      compressionLevel === level
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50"
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <span className="font-medium capitalize">{level}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {level === "light" && "best quality"}
+                      {level === "medium" && "balanced"}
+                      {level === "heavy" && "smallest size"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {loading && (
             <p className="mt-4 text-center text-muted-foreground">compressing...</p>

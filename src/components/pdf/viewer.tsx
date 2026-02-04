@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react"
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, PanelLeft, PanelLeftClose } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { PDFDocumentProxy, PDFPageProxy } from "@/lib/render"
 import { renderPage } from "@/lib/render"
@@ -17,8 +17,28 @@ export function Viewer({ pdf, initialPage = 1, onPageChange, onClick }: ViewerPr
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [currentPage, setCurrentPage] = useState(initialPage)
-  const [scale, setScale] = useState(1)
+  const [scale, setScale] = useState(1.5)
   const [pageProxy, setPageProxy] = useState<PDFPageProxy | null>(null)
+  const [thumbnails, setThumbnails] = useState<string[]>([])
+  const [showThumbnails, setShowThumbnails] = useState(true)
+
+  useEffect(() => {
+    const loadThumbnails = async () => {
+      const thumbs: string[] = []
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i)
+        const viewport = page.getViewport({ scale: 0.2 })
+        const canvas = document.createElement("canvas")
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        const ctx = canvas.getContext("2d")!
+        await page.render({ canvasContext: ctx, viewport }).promise
+        thumbs.push(canvas.toDataURL("image/png"))
+      }
+      setThumbnails(thumbs)
+    }
+    loadThumbnails()
+  }, [pdf])
 
   useEffect(() => {
     pdf.getPage(currentPage).then(setPageProxy)
@@ -81,6 +101,17 @@ export function Viewer({ pdf, initialPage = 1, onPageChange, onClick }: ViewerPr
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-2">
+          {pdf.numPages > 1 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowThumbnails(!showThumbnails)}
+              title={showThumbnails ? "Hide pages" : "Show pages"}
+              className="hidden sm:flex"
+            >
+              {showThumbnails ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -125,18 +156,47 @@ export function Viewer({ pdf, initialPage = 1, onPageChange, onClick }: ViewerPr
           </Button>
         </div>
       </div>
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-auto bg-muted/50 p-4"
-      >
-        <div className="mx-auto w-fit">
-          <canvas
-            ref={canvasRef}
-            onPointerDown={handleCanvasClick}
-            className={`bg-white shadow-lg ${onClick ? "cursor-crosshair" : ""}`}
-            style={{ touchAction: "none" }}
-            aria-label={`page ${currentPage} of ${pdf.numPages}`}
-          />
+      <div className="flex flex-1 min-h-0">
+        {showThumbnails && pdf.numPages > 1 && (
+          <aside className="w-28 lg:w-36 border-r bg-muted/30 overflow-y-auto hidden sm:block">
+            <div className="p-2 space-y-2">
+              {thumbnails.map((thumb, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setCurrentPage(idx + 1)}
+                  className={`relative cursor-pointer rounded-lg border-2 overflow-hidden transition-all ${
+                    currentPage === idx + 1
+                      ? "border-blue-500 ring-2 ring-blue-500/20"
+                      : "border-transparent hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <img
+                    src={thumb}
+                    alt={`Page ${idx + 1}`}
+                    className="w-full"
+                    draggable={false}
+                  />
+                  <div className="absolute bottom-0 inset-x-0 bg-background/80 backdrop-blur-sm py-0.5 text-center text-xs font-medium">
+                    {idx + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        )}
+        <div
+          ref={containerRef}
+          className="flex-1 overflow-auto bg-muted/50 p-4"
+        >
+          <div className="mx-auto w-fit">
+            <canvas
+              ref={canvasRef}
+              onPointerDown={handleCanvasClick}
+              className={`bg-white shadow-lg ${onClick ? "cursor-crosshair" : ""}`}
+              style={{ touchAction: "none" }}
+              aria-label={`page ${currentPage} of ${pdf.numPages}`}
+            />
+          </div>
         </div>
       </div>
     </div>

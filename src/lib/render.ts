@@ -7,10 +7,14 @@ if (typeof window !== "undefined") {
 export type PDFDocumentProxy = Awaited<ReturnType<typeof pdfjs.getDocument>["promise"]>
 export type PDFPageProxy = Awaited<ReturnType<PDFDocumentProxy["getPage"]>>
 
-export async function loadPdfForRender(file: File): Promise<PDFDocumentProxy> {
+export async function loadPdfForRender(file: File, password?: string): Promise<PDFDocumentProxy> {
   const buffer = await file.arrayBuffer()
   const data = new Uint8Array(buffer)
-  return pdfjs.getDocument({ data }).promise
+  return pdfjs.getDocument({ data, password }).promise
+}
+
+export async function loadPdfFromBytes(data: Uint8Array, password?: string): Promise<PDFDocumentProxy> {
+  return pdfjs.getDocument({ data, password }).promise
 }
 
 export interface RenderOptions {

@@ -1277,14 +1277,12 @@ export default function TextPage() {
                           ) : (
                             <div
                               onClick={() => setEditingId(item.id)}
-                              className={`cursor-text ${
-                                item.edited ? "bg-white hover:bg-gray-100" : "hover:bg-blue-100/30"
-                              }`}
+                              className="cursor-text bg-white hover:bg-blue-50"
                               style={{
                                 fontSize: item.fontSize,
                                 lineHeight: `${item.height}px`,
                                 fontFamily: "Helvetica, Arial, sans-serif",
-                                color: item.edited ? "#000" : "transparent",
+                                color: "#000",
                                 whiteSpace: "nowrap",
                               }}
                               dangerouslySetInnerHTML={{ __html: item.str }}
